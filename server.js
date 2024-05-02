@@ -61,7 +61,36 @@ app.get("/company/quote", (req, res) => {
   });
 });
 
-// TODO: count, result, description, displaySymbol, symbol, type
+// counter = 1
+
+// app.get("/company/quote", (req, res) => {
+//   const ticker = req.query.ticker;
+//   const url =
+//     "https://finnhub.io/api/v1/quote?symbol=" +
+//     ticker +
+//     "&token=" +
+//     finnhubToken;
+
+//   axios.get(url).then((response) => {
+//     if (response.data.d === null) {
+//       console.log("Company not found");
+//       return res.status(404).json({ error: "Company not found", code: "404" });
+//     } else if (response.status === 401) {
+//       console.log("Unauthorized");
+//       return res.status(401).json({ error: "Unauthorized", code: "401" });
+//     }
+
+//     // Check if response.data.c exists and is a number
+//     if (response.data.c && typeof response.data.c === 'number') {
+//       response.data.c += counter;
+//       counter++;
+//     }
+
+//     return res.json(response.data);
+//   });
+// });
+
+// // TODO: count, result, description, displaySymbol, symbol, type
 
 app.get("/company/names", (req, res) => {
   const ticker = req.query.ticker;
@@ -69,7 +98,10 @@ app.get("/company/names", (req, res) => {
     "https://finnhub.io/api/v1/search?q=" + ticker + "&token=" + finnhubToken;
 
   axios.get(url).then((response) => {
-    return res.json(response.data.result);
+    const filteredResults = response.data.result.filter(item =>
+      item.type === "Common Stock" && !item.displaySymbol.includes(".")
+    );
+    return res.json(filteredResults);
   });
 });
 
@@ -93,6 +125,19 @@ app.get("/company/news", (req, res) => {
     if (response.data.length === 0) {
       return res.status(404).json({ error: "Company not found", code: "404" });
     }
+    response.data = response.data.filter(n =>
+      n.summary &&
+      n.summary.trim() !== '' &&
+      n.headline &&
+      n.headline.trim() !== '' &&
+      n.image &&
+      n.image.trim() !== '' &&
+      n.url &&
+      n.url.trim() !== '' &&
+      n.source &&
+      n.source.trim() !== '' &&
+      n.datetime !== null
+    );
     return res.json(response.data);
   });
 });
